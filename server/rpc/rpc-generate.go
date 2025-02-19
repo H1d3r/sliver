@@ -68,7 +68,7 @@ func (rpc *Server) Generate(ctx context.Context, req *clientpb.GenerateReq) (*cl
 		if err != nil {
 			return nil, err
 		}
-	} else if err := util.AllowedName(name); err != nil {
+	} else if err := util.AllowedName(req.Name); err != nil {
 		return nil, err
 	} else {
 		name = req.Name
@@ -340,7 +340,7 @@ func (rpc *Server) GenerateExternal(ctx context.Context, req *clientpb.ExternalG
 		if err != nil {
 			return nil, err
 		}
-	} else if err := util.AllowedName(name); err != nil {
+	} else if err := util.AllowedName(req.Name); err != nil {
 		return nil, err
 	} else {
 		name = req.Name
@@ -741,10 +741,11 @@ func (rpc *Server) GenerateStage(ctx context.Context, req *clientpb.GenerateStag
 	if req.PrependSize {
 		fileData = prependPayloadSize(fileData)
 	}
+	stage2 = fileData
 
 	if req.Compress != "" {
 		stageType = req.Compress + " - "
-		stage2, err = Compress(fileData, req.Compress)
+		stage2, err = Compress(stage2, req.Compress)
 		if err != nil {
 			return nil, err
 		}

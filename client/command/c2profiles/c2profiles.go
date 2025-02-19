@@ -292,6 +292,7 @@ func C2ConfigToJSON(profileName string, profile *clientpb.HTTPC2Config) (*assets
 			Name:        header.Name,
 			Value:       header.Value,
 			Probability: int(header.Probability),
+			Method:      header.Method,
 		})
 	}
 	implantConfig.Headers = headers
@@ -358,6 +359,7 @@ func C2ConfigToJSON(profileName string, profile *clientpb.HTTPC2Config) (*assets
 			Name:        header.Name,
 			Value:       header.Value,
 			Probability: int(header.Probability),
+			Method:      header.Method,
 		})
 	}
 
@@ -453,6 +455,24 @@ func C2ConfigToProtobuf(profileName string, config *assets.HTTPC2Config) *client
 		})
 	}
 
+	for _, clientHeader := range config.ImplantConfig.Headers {
+		httpC2Headers = append(httpC2Headers, &clientpb.HTTPC2Header{
+			Method:      clientHeader.Method,
+			Name:        clientHeader.Name,
+			Value:       clientHeader.Value,
+			Probability: int32(clientHeader.Probability),
+		})
+	}
+
+	for _, urlParameter := range config.ImplantConfig.URLParameters {
+		httpC2UrlParameters = append(httpC2UrlParameters, &clientpb.HTTPC2URLParameter{
+			Method:      urlParameter.Method,
+			Name:        urlParameter.Name,
+			Value:       urlParameter.Value,
+			Probability: int32(urlParameter.Probability),
+		})
+	}
+
 	implantConfig := &clientpb.HTTPC2ImplantConfig{
 		UserAgent:                 config.ImplantConfig.UserAgent,
 		ChromeBaseVersion:         int32(config.ImplantConfig.ChromeBaseVersion),
@@ -475,14 +495,12 @@ func C2ConfigToProtobuf(profileName string, config *assets.HTTPC2Config) *client
 	// Server Config
 	serverHeaders := []*clientpb.HTTPC2Header{}
 	for _, serverHeader := range config.ServerConfig.Headers {
-		for _, method := range serverHeader.Methods {
-			serverHeaders = append(serverHeaders, &clientpb.HTTPC2Header{
-				Method:      method,
-				Name:        serverHeader.Name,
-				Value:       serverHeader.Value,
-				Probability: int32(serverHeader.Probability),
-			})
-		}
+		serverHeaders = append(serverHeaders, &clientpb.HTTPC2Header{
+			Method:      serverHeader.Method,
+			Name:        serverHeader.Name,
+			Value:       serverHeader.Value,
+			Probability: int32(serverHeader.Probability),
+		})
 	}
 
 	serverCookies := []*clientpb.HTTPC2Cookie{}
@@ -525,7 +543,7 @@ func PrintC2Profiles(profile *clientpb.HTTPC2Config, con *console.SliverClient) 
 
 	var serverHeaders []string
 	for _, header := range profile.ServerConfig.Headers {
-		serverHeaders = append(serverHeaders, header.Value)
+		serverHeaders = append(serverHeaders, header.Name)
 	}
 	tw.AppendRow(table.Row{
 		"Server Headers",
@@ -550,7 +568,7 @@ func PrintC2Profiles(profile *clientpb.HTTPC2Config, con *console.SliverClient) 
 
 	var clientHeaders []string
 	for _, header := range profile.ImplantConfig.Headers {
-		clientHeaders = append(clientHeaders, header.Value)
+		clientHeaders = append(clientHeaders, header.Name)
 	}
 	tw.AppendRow(table.Row{
 		"Client Headers",
